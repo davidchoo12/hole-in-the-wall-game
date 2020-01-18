@@ -15,16 +15,18 @@
 
 <body>
   <input type="checkbox" id="pause" value="pause" style="position:fixed">
+  <div id="points" style="position: fixed; top: 0; right: 0; background: greenyellow; font-size: 10em;">0</div>
   <div id="main">
     <video id="video" playsinline style="display: none;"></video>
     <canvas id="output"></canvas>
   </div>
+  <img id="spike-img" src="./spike.png" alt="" style="display:none">
   <!-- <img id="pose" src="./pose1.jpg"> -->
   <!-- Load TensorFlow.js -->
   <script src="node_modules/@tensorflow/tfjs/dist/tf.min.js"></script>
   <!-- Load Posenet -->
-  <script src="node_modules/@tensorflow-models/posenet/dist/posenet.min.js">
-  </script>
+  <script src="node_modules/@tensorflow-models/posenet/dist/posenet.min.js"></script>
+  <script src="node_modules/posenet-similarity/dist/posenet-similarity.min.js"></script>
   <script type="text/javascript">
     // demo util
     const color = 'aqua';
@@ -61,6 +63,14 @@
           scale, ctx, thickness);
       });
     }
+    // Draws hole pose skeleton
+    function drawSkeletonMatch(holeKeypoints, actualKeypoints, minConfidence, ctx) {
+      const adjacentHoleKeypoints = posenet.getAdjacentKeyPoints(holeKeypoints, minConfidence);
+      const adjacentActualKeypoints = posenet.getAdjacentKeyPoints(actualKeypoints, minConfidence);
+      for (keypoints of adjacentHoleKeyPoints) {
+        drawSegment(toTuple(keypoints[0].position), toTuple(keypoints[1].position))
+      }
+    }
     // Draw pose keypoints onto a canvas
     function drawKeypoints(keypoints, minConfidence, ctx, radius = 3, scale = 1) {
       for (let i = 0; i < keypoints.length; i++) {
@@ -87,146 +97,7 @@
       // drawPoint(ctx, boundingBox.minY + bboxHeight/2, boundingBox.minX + bboxWidth/2, radius, color);
     }
   </script>
-  <script type="text/javascript">
-  const sampleKeypoints = [
-    {
-      "score": 0.9952152967453003,
-      "part": "nose",
-      "position": {
-        "x": 618.4699678532345,
-        "y": 87.02963696194064
-      }
-    },
-    {
-      "score": 0.9902645349502563,
-      "part": "leftEye",
-      "position": {
-        "x": 608.0143178501946,
-        "y": 77.31678243555444
-      }
-    },
-    {
-      "score": 0.9882329106330872,
-      "part": "rightEye",
-      "position": {
-        "x": 641.4956871656129,
-        "y": 77.23209793743916
-      }
-    },
-    {
-      "score": 0.8273254036903381,
-      "part": "leftEar",
-      "position": {
-        "x": 586.9970874118435,
-        "y": 76.01731783499508
-      }
-    },
-    {
-      "score": 0.8080974221229553,
-      "part": "rightEar",
-      "position": {
-        "x": 642.1522164548882,
-        "y": 89.73030725620134
-      }
-    },
-    {
-      "score": 0.9987748265266418,
-      "part": "leftShoulder",
-      "position": {
-        "x": 545.7332939415127,
-        "y": 173.21113984223007
-      }
-    },
-    {
-      "score": 0.9952490329742432,
-      "part": "rightShoulder",
-      "position": {
-        "x": 680.2176632417315,
-        "y": 175.7112348385822
-      }
-    },
-    {
-      "score": 0.9945395588874817,
-      "part": "leftElbow",
-      "position": {
-        "x": 469.73842564445533,
-        "y": 264.18858105848733
-      }
-    },
-    {
-      "score": 0.9942136406898499,
-      "part": "rightElbow",
-      "position": {
-        "x": 743.1898853584023,
-        "y": 264.26056929413903
-      }
-    },
-    {
-      "score": 0.9863377213478088,
-      "part": "leftWrist",
-      "position": {
-        "x": 450.27492704280166,
-        "y": 351.3328197197227
-      }
-    },
-    {
-      "score": 0.9369673728942871,
-      "part": "rightWrist",
-      "position": {
-        "x": 774.8380340694918,
-        "y": 330.3162732551069
-      }
-    },
-    {
-      "score": 0.9970237612724304,
-      "part": "leftHip",
-      "position": {
-        "x": 590.1993669443094,
-        "y": 353.46168797118185
-      }
-    },
-    {
-      "score": 0.9906916618347168,
-      "part": "rightHip",
-      "position": {
-        "x": 671.2657294959874,
-        "y": 349.8633876459144
-      }
-    },
-    {
-      "score": 0.9453628063201904,
-      "part": "leftKnee",
-      "position": {
-        "x": 590.2351900687014,
-        "y": 480.1325978082441
-      }
-    },
-    {
-      "score": 0.9800221920013428,
-      "part": "rightKnee",
-      "position": {
-        "x": 721.6027765533804,
-        "y": 465.0645709204766
-      }
-    },
-    {
-      "score": 0.9495647549629211,
-      "part": "leftAnkle",
-      "position": {
-        "x": 608.710090132539,
-        "y": 584.5859033013131
-      }
-    },
-    {
-      "score": 0.9671235084533691,
-      "part": "rightAnkle",
-      "position": {
-        "x": 746.3402256353356,
-        "y": 580.5899577456225
-      }
-    }
-  ];
-  </script>
+  <script src="./samplePoses.js"></script>
   <script type="text/javascript">
     (async function () {
       const poseImg = document.querySelector('img#pose');
@@ -318,12 +189,13 @@
         canvas.width = videoWidth;
         canvas.height = videoHeight;
         let counter = 0;
+        let currPose = samplePoses[Math.floor(Math.random() * samplePoses.length)];
         // runs in requestAnimationFrame loop
         async function poseDetectionFrame() {
           let poses = [];
           let minPoseConfidence;
           let minPartConfidence;
-          const pose = await guiState.net.estimatePoses(video, {
+          const pose = await guiState.net.estimateSinglePose(video, {
             flipHorizontal: flipPoseHorizontal,
             decodingMethod: 'single-person'
           });
@@ -343,10 +215,10 @@
             const boundingBox = posenet.getBoundingBox(keypoints);
             const bboxMidY = boundingBox.minY + (boundingBox.maxY - boundingBox.minY)/2;
             const bboxMidX = boundingBox.minX + (boundingBox.maxX - boundingBox.minX)/2;
-            drawPoint(ctx, bboxMidY, bboxMidX, 3, 'red');
+            // drawPoint(ctx, bboxMidY, bboxMidX, 3, 'red');
             const videoMidY = videoHeight/2;
             const videoMidX = videoWidth/2;
-            drawPoint(ctx, videoMidY, videoMidX, 3, 'yellow');
+            // drawPoint(ctx, videoMidY, videoMidX, 3, 'yellow');
             const deltaY = videoMidY - bboxMidY;
             const deltaX = videoMidX - bboxMidX;
             const deltas = { bboxMidY, bboxMidX, videoMidY, videoMidX, deltaY, deltaX };
@@ -355,9 +227,11 @@
             ctx.translate((1/scale - 1) * bboxMidX, (1/scale - 1) * bboxMidY);
             ctx.translate(deltaX / scale, deltaY / scale);
             // ctx.translate(videoMidX * 3, videoMidY * 3);
-            console.log(boundingBox);
-            console.log(`bboxMidY ${bboxMidY} bboxMidX ${bboxMidX} videoMidY ${videoMidY} videoMidX ${videoMidX} deltaY ${deltaY} deltaX ${deltaX}`)
+            // console.log(boundingBox);
+            // console.log(`bboxMidY ${bboxMidY} bboxMidX ${bboxMidX} videoMidY ${videoMidY} videoMidX ${videoMidX} deltaY ${deltaY} deltaX ${deltaX}`)
             if (background) {
+              // let pattern = ctx.createPattern(spikeSprite, 'repeat');
+              // ctx.fillStyle = pattern;
               ctx.fillStyle = background;
               ctx.fillRect(0, 0, videoWidth, videoHeight);
             }
@@ -372,17 +246,29 @@
             }
             ctx.restore();
           }
-          drawOverlay(sampleKeypoints, 0, ctx, 1);
           // draw static keypoints
-          if (counter > 100) {
+          if (counter > 40) {
             counter = 0
+            let weightedDist = pns.poseSimilarity(currPose, pose, { strategy: 'cosineSimilarity' });
+            console.log('weightedDist', weightedDist);
+            if (weightedDist >= 0.98) {
+              let points = parseInt(document.querySelector('#points').textContent);
+              document.querySelector('#points').textContent = ++points;
+            }
+            const currPoseIndex = Math.floor(Math.random() * samplePoses.length);
+            currPose = samplePoses[currPoseIndex];
           }
-          let scale = counter / 100;
-          drawOverlay(sampleKeypoints, 0, ctx, scale, 'yellow', 20);
+          let scale = counter / 40;
+          // const spikeSprite = document.querySelector('#spike-img');
+          drawOverlay(currPose.keypoints, 0, ctx, scale, 'rgba(255,255,255,0.3)', 20);
+          // drawOverlay(sampleKeypoints, 0, ctx, 1);
           // draw poses skeletons
+          if (poses[0].score > 0.90) {
+            console.log(poses[0]);
+          }
           for (const { score, keypoints } of poses) {
             if (score >= minPoseConfidence) {
-              console.log(keypoints);
+              // console.log(keypoints);
               if (guiState.output.showPoints) {
                 drawKeypoints(keypoints, minPartConfidence, ctx);
               }
