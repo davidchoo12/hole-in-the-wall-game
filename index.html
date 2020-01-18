@@ -6,16 +6,66 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
+  <link href="https://fonts.googleapis.com/css?family=Indie+Flower&display=swap" rel="stylesheet"> 
   <style>
   body {
     margin: 0;
+    padding: 0;
+    font-family: 'Indie Flower', cursive;
+  }
+  #hud {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: calc(100vw - 20px);
+    height: calc(100vh - 20px);
+    text-align: right;
+  }
+  #points-disp {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 10em;
+    color: greenyellow;
+    line-height: 1;
+  }
+  #fails-disp {
+    position: absolute;
+    top: 2em;
+    left: 0;
+    color: red;
+    font-size: 5em;
+    line-height: 1;
+  }
+  #game-over {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 50vh;
+    width: 50vw;
+    background: teal;
+    text-align: center;
+    font-size: 6em;
+    line-height: 2em;
   }
   </style>
 </head>
 
 <body>
-  <input type="checkbox" id="pause" value="pause" style="position:fixed">
-  <div id="points" style="position: fixed; top: 0; right: 0; background: greenyellow; font-size: 10em;">0</div>
+  <div id="hud">
+    <label for="pause">Pause</label>
+    <input type="checkbox" id="pause" value="pause">
+    <br>
+    <label for="pose-correct">Simulate correct pose</label>
+    <input type="checkbox" id="pose-correct" value="pause">
+    <div id="points-disp">Score: <span class="points">0</span></div>
+    <div id="fails-disp">Fails: <span id="fails"></span></div>
+    <div id="game-over">
+      You scored: <span class="points">0</span>
+    </div>
+  </div>
   <div id="main">
     <video id="video" playsinline style="display: none;"></video>
     <canvas id="output"></canvas>
@@ -190,6 +240,7 @@
         canvas.height = videoHeight;
         let counter = 0;
         let currPose = samplePoses[Math.floor(Math.random() * samplePoses.length)];
+        let gameOver = false;
         // runs in requestAnimationFrame loop
         async function poseDetectionFrame() {
           let poses = [];
@@ -222,19 +273,26 @@
             const deltaY = videoMidY - bboxMidY;
             const deltaX = videoMidX - bboxMidX;
             const deltas = { bboxMidY, bboxMidX, videoMidY, videoMidX, deltaY, deltaX };
+            // scale down
             ctx.scale(scale, scale);
             // ctx.translate(videoMidX, videoMidY);
-            ctx.translate((1/scale - 1) * bboxMidX, (1/scale - 1) * bboxMidY);
-            ctx.translate(deltaX / scale, deltaY / scale);
             // ctx.translate(videoMidX * 3, videoMidY * 3);
             // console.log(boundingBox);
             // console.log(`bboxMidY ${bboxMidY} bboxMidX ${bboxMidX} videoMidY ${videoMidY} videoMidX ${videoMidX} deltaY ${deltaY} deltaX ${deltaX}`)
             if (background) {
               // let pattern = ctx.createPattern(spikeSprite, 'repeat');
               // ctx.fillStyle = pattern;
+              ctx.save()
+              ctx.translate(videoMidX / scale, videoMidY / scale);
+              ctx.translate(-videoMidX, -videoMidY);
               ctx.fillStyle = background;
               ctx.fillRect(0, 0, videoWidth, videoHeight);
+              ctx.restore();
             }
+            // move skeleton back to bbox
+            ctx.translate((1/scale - 1) * bboxMidX, (1/scale - 1) * bboxMidY);
+            // move skeleton to middle of canvas
+            ctx.translate(deltaX / scale, deltaY / scale);
             if (guiState.output.showPoints) {
               drawKeypoints(keypoints, minPartConfidence, ctx, thickness);
             }
@@ -245,15 +303,26 @@
               drawBoundingBox(keypoints, ctx, 3);
             }
             ctx.restore();
-          }
+          } // end of drawOverlay
           // draw static keypoints
           if (counter > 40) {
             counter = 0
             let weightedDist = pns.poseSimilarity(currPose, pose, { strategy: 'cosineSimilarity' });
             console.log('weightedDist', weightedDist);
-            if (weightedDist >= 0.98) {
-              let points = parseInt(document.querySelector('#points').textContent);
-              document.querySelector('#points').textContent = ++points;
+            let simulatingCorrectPose = document.querySelector('#pose-correct').checked;
+            if (weightedDist >= 0.98 || simulatingCorrectPose) {
+              let points = parseInt(document.querySelector('.points').textContent)+ 1;
+              for (p of document.querySelectorAll('.points')) {
+                p.textContent = points;
+              }
+            } else {
+              let fails = document.querySelector('#fails').textContent.length;
+              if (fails == 2) {
+                // show game over
+                gameOver = true;
+                document.querySelector('#game-over').style.display = 'block';
+              }
+              document.querySelector('#fails').textContent += 'X';
             }
             const currPoseIndex = Math.floor(Math.random() * samplePoses.length);
             currPose = samplePoses[currPoseIndex];
@@ -280,7 +349,7 @@
               }
             }
           }
-          if (!document.querySelector('#pause').checked) {
+          if (!document.querySelector('#pause').checked && !gameOver) {
             requestAnimationFrame(poseDetectionFrame);
           }
           counter++;
