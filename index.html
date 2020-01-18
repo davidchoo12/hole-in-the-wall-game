@@ -6,10 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
+  <style>
+  body {
+    margin: 0;
+  }
+  </style>
 </head>
 
 <body>
-  <input type="checkbox" id="pause" value="pause">
+  <input type="checkbox" id="pause" value="pause" style="position:fixed">
   <div id="main">
     <video id="video" playsinline style="display: none;"></video>
     <canvas id="output"></canvas>
@@ -37,27 +42,27 @@
       ctx.fill();
     }
     // Draws a line on a canvas, i.e. a joint
-    function drawSegment([ay, ax], [by, bx], color, scale, ctx) {
+    function drawSegment([ay, ax], [by, bx], color, scale, ctx, thickness = lineWidth) {
       ctx.beginPath();
       ctx.moveTo(ax * scale, ay * scale);
       ctx.lineTo(bx * scale, by * scale);
-      ctx.lineWidth = lineWidth;
+      ctx.lineWidth = thickness;
       ctx.strokeStyle = color;
       ctx.stroke();
     }
     // Draws a pose skeleton by looking up all adjacent keypoints/joints
-    function drawSkeleton(keypoints, minConfidence, ctx, scale = 1) {
+    function drawSkeleton(keypoints, minConfidence, ctx, thickness = lineWidth, scale = 1) {
       const adjacentKeyPoints =
         posenet.getAdjacentKeyPoints(keypoints, minConfidence);
 
       adjacentKeyPoints.forEach((keypoints) => {
         drawSegment(
           toTuple(keypoints[0].position), toTuple(keypoints[1].position), color,
-          scale, ctx);
+          scale, ctx, thickness);
       });
     }
     // Draw pose keypoints onto a canvas
-    function drawKeypoints(keypoints, minConfidence, ctx, scale = 1) {
+    function drawKeypoints(keypoints, minConfidence, ctx, radius = 3, scale = 1) {
       for (let i = 0; i < keypoints.length; i++) {
         const keypoint = keypoints[i];
 
@@ -66,18 +71,161 @@
         }
 
         const { y, x } = keypoint.position;
-        drawPoint(ctx, y * scale, x * scale, 3, color);
+        drawPoint(ctx, y * scale, x * scale, radius, color);
       }
     }
     // Draw the bounding box of a pose. For example, for a whole person standing in an image, the bounding box will begin at the nose and extend to one of ankles
-    function drawBoundingBox(keypoints, ctx) {
+    function drawBoundingBox(keypoints, ctx, radius = 3) {
       const boundingBox = posenet.getBoundingBox(keypoints);
+      const bboxWidth = boundingBox.maxX - boundingBox.minX;
+      const bboxHeight = boundingBox.maxY - boundingBox.minY;
       ctx.rect(
         boundingBox.minX, boundingBox.minY, boundingBox.maxX - boundingBox.minX,
         boundingBox.maxY - boundingBox.minY);
       ctx.strokeStyle = boundingBoxColor;
       ctx.stroke();
+      // drawPoint(ctx, boundingBox.minY + bboxHeight/2, boundingBox.minX + bboxWidth/2, radius, color);
     }
+  </script>
+  <script type="text/javascript">
+  const sampleKeypoints = [
+    {
+      "score": 0.9952152967453003,
+      "part": "nose",
+      "position": {
+        "x": 618.4699678532345,
+        "y": 87.02963696194064
+      }
+    },
+    {
+      "score": 0.9902645349502563,
+      "part": "leftEye",
+      "position": {
+        "x": 608.0143178501946,
+        "y": 77.31678243555444
+      }
+    },
+    {
+      "score": 0.9882329106330872,
+      "part": "rightEye",
+      "position": {
+        "x": 641.4956871656129,
+        "y": 77.23209793743916
+      }
+    },
+    {
+      "score": 0.8273254036903381,
+      "part": "leftEar",
+      "position": {
+        "x": 586.9970874118435,
+        "y": 76.01731783499508
+      }
+    },
+    {
+      "score": 0.8080974221229553,
+      "part": "rightEar",
+      "position": {
+        "x": 642.1522164548882,
+        "y": 89.73030725620134
+      }
+    },
+    {
+      "score": 0.9987748265266418,
+      "part": "leftShoulder",
+      "position": {
+        "x": 545.7332939415127,
+        "y": 173.21113984223007
+      }
+    },
+    {
+      "score": 0.9952490329742432,
+      "part": "rightShoulder",
+      "position": {
+        "x": 680.2176632417315,
+        "y": 175.7112348385822
+      }
+    },
+    {
+      "score": 0.9945395588874817,
+      "part": "leftElbow",
+      "position": {
+        "x": 469.73842564445533,
+        "y": 264.18858105848733
+      }
+    },
+    {
+      "score": 0.9942136406898499,
+      "part": "rightElbow",
+      "position": {
+        "x": 743.1898853584023,
+        "y": 264.26056929413903
+      }
+    },
+    {
+      "score": 0.9863377213478088,
+      "part": "leftWrist",
+      "position": {
+        "x": 450.27492704280166,
+        "y": 351.3328197197227
+      }
+    },
+    {
+      "score": 0.9369673728942871,
+      "part": "rightWrist",
+      "position": {
+        "x": 774.8380340694918,
+        "y": 330.3162732551069
+      }
+    },
+    {
+      "score": 0.9970237612724304,
+      "part": "leftHip",
+      "position": {
+        "x": 590.1993669443094,
+        "y": 353.46168797118185
+      }
+    },
+    {
+      "score": 0.9906916618347168,
+      "part": "rightHip",
+      "position": {
+        "x": 671.2657294959874,
+        "y": 349.8633876459144
+      }
+    },
+    {
+      "score": 0.9453628063201904,
+      "part": "leftKnee",
+      "position": {
+        "x": 590.2351900687014,
+        "y": 480.1325978082441
+      }
+    },
+    {
+      "score": 0.9800221920013428,
+      "part": "rightKnee",
+      "position": {
+        "x": 721.6027765533804,
+        "y": 465.0645709204766
+      }
+    },
+    {
+      "score": 0.9495647549629211,
+      "part": "leftAnkle",
+      "position": {
+        "x": 608.710090132539,
+        "y": 584.5859033013131
+      }
+    },
+    {
+      "score": 0.9671235084533691,
+      "part": "rightAnkle",
+      "position": {
+        "x": 746.3402256353356,
+        "y": 580.5899577456225
+      }
+    }
+  ];
   </script>
   <script type="text/javascript">
     (async function () {
@@ -169,7 +317,7 @@
 
         canvas.width = videoWidth;
         canvas.height = videoHeight;
-
+        let counter = 0;
         // runs in requestAnimationFrame loop
         async function poseDetectionFrame() {
           let poses = [];
@@ -190,6 +338,47 @@
             ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
             ctx.restore();
           }
+          function drawOverlay(keypoints, minPartConfidence, ctx, scale, background = undefined, thickness = 3) {
+            ctx.save();
+            const boundingBox = posenet.getBoundingBox(keypoints);
+            const bboxMidY = boundingBox.minY + (boundingBox.maxY - boundingBox.minY)/2;
+            const bboxMidX = boundingBox.minX + (boundingBox.maxX - boundingBox.minX)/2;
+            drawPoint(ctx, bboxMidY, bboxMidX, 3, 'red');
+            const videoMidY = videoHeight/2;
+            const videoMidX = videoWidth/2;
+            drawPoint(ctx, videoMidY, videoMidX, 3, 'yellow');
+            const deltaY = videoMidY - bboxMidY;
+            const deltaX = videoMidX - bboxMidX;
+            const deltas = { bboxMidY, bboxMidX, videoMidY, videoMidX, deltaY, deltaX };
+            ctx.scale(scale, scale);
+            // ctx.translate(videoMidX, videoMidY);
+            ctx.translate((1/scale - 1) * bboxMidX, (1/scale - 1) * bboxMidY);
+            ctx.translate(deltaX / scale, deltaY / scale);
+            // ctx.translate(videoMidX * 3, videoMidY * 3);
+            console.log(boundingBox);
+            console.log(`bboxMidY ${bboxMidY} bboxMidX ${bboxMidX} videoMidY ${videoMidY} videoMidX ${videoMidX} deltaY ${deltaY} deltaX ${deltaX}`)
+            if (background) {
+              ctx.fillStyle = background;
+              ctx.fillRect(0, 0, videoWidth, videoHeight);
+            }
+            if (guiState.output.showPoints) {
+              drawKeypoints(keypoints, minPartConfidence, ctx, thickness);
+            }
+            if (guiState.output.showSkeleton) {
+              drawSkeleton(keypoints, minPartConfidence, ctx, thickness);
+            }
+            if (guiState.output.showBoundingBox) {
+              drawBoundingBox(keypoints, ctx, 3);
+            }
+            ctx.restore();
+          }
+          drawOverlay(sampleKeypoints, 0, ctx, 1);
+          // draw static keypoints
+          if (counter > 100) {
+            counter = 0
+          }
+          let scale = counter / 100;
+          drawOverlay(sampleKeypoints, 0, ctx, scale, 'yellow', 20);
           // draw poses skeletons
           for (const { score, keypoints } of poses) {
             if (score >= minPoseConfidence) {
@@ -208,6 +397,7 @@
           if (!document.querySelector('#pause').checked) {
             requestAnimationFrame(poseDetectionFrame);
           }
+          counter++;
         } // end of poseDetectionFrame
         poseDetectionFrame();
       } // end of detectPoseInRealTime
