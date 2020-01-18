@@ -4,7 +4,8 @@
   "description": "Hole in the wall game powered by tensorflow pose estimation",
   "main": "index.js",
   "dependencies": {
-    "@tensorflow-models/posenet": "^2.2.1"
+    "@tensorflow-models/posenet": "^2.2.1",
+    "@tensorflow/tfjs": "^1.5.1"
   },
   "devDependencies": {},
   "scripts": {
