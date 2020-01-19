@@ -2,7 +2,7 @@
 
 A browser game reminiscent of [Hole in the Wall](<https://en.wikipedia.org/wiki/Hole_in_the_Wall_(American_game_show)>) gameshow powered by [Tensorflow Pose Estimation library (aka Posenet)](https://www.tensorflow.org/lite/models/pose_estimation/overview).
 
-[Try out the demo!](https://davidchoo12.github.io/hole-in-the-wall-game/)
+[Try out the demo!](https://davidchoo12.github.io/hole-in-the-wall-game/) or [watch my demo](https://www.youtube.com/watch?v=T5K2XZUlXPY)
 
 [![](demo.jpg)](https://www.youtube.com/watch?v=T5K2XZUlXPY)
 
