@@ -15,27 +15,34 @@
   }
   #hud {
     position: fixed;
-    top: 10px;
-    left: 10px;
-    width: calc(100vw - 20px);
-    height: calc(100vh - 20px);
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     text-align: right;
   }
   #points-disp {
     position: absolute;
     top: 0;
     left: 0;
+    padding: 10px 10px 0 10px;
     font-size: 10em;
-    color: greenyellow;
+    color: white;
+    background-color: yellowgreen;
     line-height: 1;
+    border-bottom-right-radius: 40px;
   }
   #fails-disp {
     position: absolute;
-    top: 2em;
+    top: calc(2em + 15px);
     left: 0;
-    color: red;
+    padding-left: 10px;
+    padding-right: 10px;
+    color: white;
+    background-color: red;
     font-size: 5em;
     line-height: 1;
+    border-bottom-right-radius: 20px;
   }
   #game-over {
     display: none;
@@ -55,7 +62,7 @@
 
 <body>
   <div id="hud">
-    <label for="pause">Pause</label>
+    <label for="pause">Stop</label>
     <input type="checkbox" id="pause" value="pause">
     <br>
     <label for="pose-correct">Simulate correct pose</label>
@@ -329,7 +336,7 @@
           }
           let scale = counter / 40;
           // const spikeSprite = document.querySelector('#spike-img');
-          drawOverlay(currPose.keypoints, 0, ctx, scale, 'rgba(255,255,255,0.3)', 20);
+          drawOverlay(currPose.keypoints, 0, ctx, scale, 'rgba(255,255,255,0.5)', 20);
           // drawOverlay(sampleKeypoints, 0, ctx, 1);
           // draw poses skeletons
           if (poses[0].score > 0.90) {
