@@ -6,57 +6,61 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
-  <link href="https://fonts.googleapis.com/css?family=Indie+Flower&display=swap" rel="stylesheet"> 
+  <link href="https://fonts.googleapis.com/css?family=Indie+Flower&display=swap" rel="stylesheet">
   <style>
-  body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Indie Flower', cursive;
-  }
-  #hud {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    text-align: right;
-  }
-  #points-disp {
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 10px 10px 0 10px;
-    font-size: 10em;
-    color: white;
-    background-color: yellowgreen;
-    line-height: 1;
-    border-bottom-right-radius: 40px;
-  }
-  #fails-disp {
-    position: absolute;
-    top: calc(2em + 15px);
-    left: 0;
-    padding-left: 10px;
-    padding-right: 10px;
-    color: white;
-    background-color: red;
-    font-size: 5em;
-    line-height: 1;
-    border-bottom-right-radius: 20px;
-  }
-  #game-over {
-    display: none;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    height: 50vh;
-    width: 50vw;
-    background: teal;
-    text-align: center;
-    font-size: 6em;
-    line-height: 2em;
-  }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Indie Flower', cursive;
+    }
+
+    #hud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      text-align: right;
+    }
+
+    #points-disp {
+      position: absolute;
+      top: 0;
+      left: 0;
+      padding: 10px 10px 0 10px;
+      font-size: 10em;
+      color: white;
+      background-color: yellowgreen;
+      line-height: 1;
+      border-bottom-right-radius: 40px;
+    }
+
+    #fails-disp {
+      position: absolute;
+      top: calc(2em + 15px);
+      left: 0;
+      padding-left: 10px;
+      padding-right: 10px;
+      color: white;
+      background-color: red;
+      font-size: 5em;
+      line-height: 1;
+      border-bottom-right-radius: 20px;
+    }
+
+    #game-over {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      height: 50vh;
+      width: 50vw;
+      background: teal;
+      text-align: center;
+      font-size: 6em;
+      line-height: 2em;
+    }
   </style>
 </head>
 
@@ -80,10 +84,13 @@
   <img id="spike-img" src="./spike.png" alt="" style="display:none">
   <!-- <img id="pose" src="./pose1.jpg"> -->
   <!-- Load TensorFlow.js -->
-  <script src="node_modules/@tensorflow/tfjs/dist/tf.min.js"></script>
+  <script src="https://unpkg.com/@tensorflow/tfjs@1.5.1/dist/tf.min.js"></script>
+  <!-- <script src="node_modules/@tensorflow/tfjs/dist/tf.min.js"></script> -->
   <!-- Load Posenet -->
-  <script src="node_modules/@tensorflow-models/posenet/dist/posenet.min.js"></script>
-  <script src="node_modules/posenet-similarity/dist/posenet-similarity.min.js"></script>
+  <script src="https://unpkg.com/@tensorflow-models/posenet@2.2.1/dist/posenet.min.js"></script>
+  <!-- <script src="node_modules/@tensorflow-models/posenet/dist/posenet.min.js"></script> -->
+  <script src="https://unpkg.com/posenet-similarity@0.4.3/dist/posenet-similarity.min.js"></script>
+  <!-- <script src="node_modules/posenet-similarity/dist/posenet-similarity.min.js"></script> -->
   <script type="text/javascript">
     // demo util
     const color = 'aqua';
@@ -271,11 +278,11 @@
           function drawOverlay(keypoints, minPartConfidence, ctx, scale, background = undefined, thickness = 3) {
             ctx.save();
             const boundingBox = posenet.getBoundingBox(keypoints);
-            const bboxMidY = boundingBox.minY + (boundingBox.maxY - boundingBox.minY)/2;
-            const bboxMidX = boundingBox.minX + (boundingBox.maxX - boundingBox.minX)/2;
+            const bboxMidY = boundingBox.minY + (boundingBox.maxY - boundingBox.minY) / 2;
+            const bboxMidX = boundingBox.minX + (boundingBox.maxX - boundingBox.minX) / 2;
             // drawPoint(ctx, bboxMidY, bboxMidX, 3, 'red');
-            const videoMidY = videoHeight/2;
-            const videoMidX = videoWidth/2;
+            const videoMidY = videoHeight / 2;
+            const videoMidX = videoWidth / 2;
             // drawPoint(ctx, videoMidY, videoMidX, 3, 'yellow');
             const deltaY = videoMidY - bboxMidY;
             const deltaX = videoMidX - bboxMidX;
@@ -297,7 +304,7 @@
               ctx.restore();
             }
             // move skeleton back to bbox
-            ctx.translate((1/scale - 1) * bboxMidX, (1/scale - 1) * bboxMidY);
+            ctx.translate((1 / scale - 1) * bboxMidX, (1 / scale - 1) * bboxMidY);
             // move skeleton to middle of canvas
             ctx.translate(deltaX / scale, deltaY / scale);
             if (guiState.output.showPoints) {
@@ -318,7 +325,7 @@
             console.log('weightedDist', weightedDist);
             let simulatingCorrectPose = document.querySelector('#pose-correct').checked;
             if (weightedDist >= 0.98 || simulatingCorrectPose) {
-              let points = parseInt(document.querySelector('.points').textContent)+ 1;
+              let points = parseInt(document.querySelector('.points').textContent) + 1;
               for (p of document.querySelectorAll('.points')) {
                 p.textContent = points;
               }
